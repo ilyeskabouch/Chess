@@ -5,9 +5,20 @@ class Piece:
         self.color = color
         self.type = type
         self.image = pygame.image.load(f'data/imgs/Chess{type}{color}.png')
+        self.has_moved = False
 
     def draw(self, screen, x, y):
         screen.blit(self.image, (x, y))
+
+    def is_in_check(self, position, board):
+        # Check if the king is in check
+        for x in range(8):
+            for y in range(8):
+                piece = board[x][y].piece
+                if piece is not None and piece.color != self.color:
+                    if piece.is_valid_move((x, y), position, board):
+                        return True
+        return False
 
     def is_valid_move(self, current_position, target_position, board):
         dx = target_position[0] - current_position[0]
@@ -117,6 +128,36 @@ class Piece:
                 if target_piece is not None and target_piece.color == self.color:
                     # Can't move to a square occupied by a piece of the same color
                     return False
+            elif abs(dx) == 2 and dy == 0:
+                # Castling
+                if self.has_moved:
+                    return False
+                if dx > 0:
+                    # King side castling
+                    if board[7][current_position[1]].piece is None or \
+                       board[7][current_position[1]].piece.type != 'Rook' or \
+                       board[7][current_position[1]].piece.has_moved:
+                        return False
+                    for x in range(current_position[0] + 1, 7):
+                        if board[x][current_position[1]].piece is not None:
+                            return False
+                    if self.is_in_check(current_position, board) or \
+                       self.is_in_check((current_position[0] + 1, current_position[1]), board) or \
+                       self.is_in_check((current_position[0] + 2, current_position[1]), board):
+                        return False
+                else:
+                    # Queen side castling
+                    if board[0][current_position[1]].piece is None or \
+                       board[0][current_position[1]].piece.type != 'Rook' or \
+                       board[0][current_position[1]].piece.has_moved:
+                        return False
+                    for x in range(current_position[0] - 1, 0, -1):
+                        if board[x][current_position[1]].piece is not None:
+                            return False
+                    if self.is_in_check(current_position, board) or \
+                       self.is_in_check((current_position[0] - 1, current_position[1]), board) or \
+                       self.is_in_check((current_position[0] - 2, current_position[1]), board):
+                        return False
             else:
                 return False
         return True
