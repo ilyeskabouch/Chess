@@ -2,7 +2,7 @@ import pygame
 import sys
 sys.path.insert(1, 'data/classes')
 
-from Board import Board
+from data.classes.Board import Board
 
 def main():
     pygame.init()
@@ -20,6 +20,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            # Selecting a piece and moving it. Reselecting a piece should deselect the previous piece. If same piece is selected, deselect it.
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 i, j = x // 50, y // 50  # Assuming each square is 50x50 pixels
@@ -39,6 +40,13 @@ def main():
                         selected_piece = None
                         selected_square = None
                         valid_moves = []
+                    elif target_square.piece is not None and target_square.piece.color == selected_piece.color:
+                        # Reselect the piece
+                        selected_square.selected = False
+                        selected_square = target_square
+                        selected_square.selected = True
+                        selected_piece = selected_square.piece
+                        valid_moves = [(x, y) for x in range(8) for y in range(8) if selected_piece.is_valid_move((selected_square.i, selected_square.j), (x, y), board.board)]
                     else:
                         # Invalid move, show an error message or something
                         pass
